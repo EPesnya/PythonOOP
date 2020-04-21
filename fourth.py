@@ -20,7 +20,7 @@ class CN:
         return result
 
     def metrics(self, f1, f2):
-        return np.sqrt(self.norm(lambda x: f1(x) - f2(x)))
+        return self.norm(lambda x: f1(x) - f2(x))
 
 
 
