@@ -3,6 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from abc import ABC
+import second as sec
 
 
 class AbstractExplicitRKmethod(ABC):
@@ -38,12 +39,7 @@ class AbstractExplicitRKmethod(ABC):
         return k
     
     def plot_solution(self):
-        plt.plot(self.time_array, self.solution_array, '-', linewidth=4)
-        plt.grid('off')
-        plt.title('Решение методом %s ' % self.__class__.__name__)
-        plt.xlabel('Время')
-        plt.ylabel('Популяция')
-        plt.show()
+        plt.plot(self.time_array, self.solution_array, '-', linewidth=2, label=self.__class__.__name__)
 
 
 class ExplicitEuler(AbstractExplicitRKmethod):
@@ -75,8 +71,26 @@ class RK4(AbstractExplicitRKmethod):
             ])
         self.b = np.array([1/6, 1/3, 1/3, 1/6])
 
-class ImplicitTrapezoidal:
-    pass
+class ImplicitTrapezoidal(AbstractExplicitRKmethod):
+
+    def solve(self):
+        self.solution_array[0] = self.u_0
+        epsilon = 1e-3
+
+        for i in range(self.num_blocks):
+            u_old = self.solution_array[i]
+
+            F = lambda u_n: u_n - u_old - self.dt / 2 * (self.f(u_n) + self.f(u_old))
+            d_num_F = sec.DerivativeNum(F, self.dt, [-1/2, 0, 1/2])
+
+            u_k_0 = u_old
+            u_k_1 = u_old + self.dt * self.f(u_old)
+
+            while abs(u_k_1 - u_k_0) > epsilon:
+                u_k_0 = u_k_1
+                u_k_1 = u_k_1 - F(u_k_1) / d_num_F(u_k_1)
+
+            self.solution_array[i + 1] = u_k_1
 
 
 class LogisticRightHandSide:
@@ -93,10 +107,16 @@ class LogisticRightHandSide:
 
 if __name__ == "__main__":
     
-    methods_class = [ExplicitEuler, Heun, RK4]
+    methods_class = [ExplicitEuler, Heun, RK4, ImplicitTrapezoidal]
     rhs_1 = LogisticRightHandSide(alpha=0.2, R=100.)
 
     for method_class in methods_class:
         method = method_class(f=rhs_1, u_0=2., num_blocks=30, t_start=0., t_end=80.)    
         method.solve()
         method.plot_solution()
+    
+    plt.xlabel('Время')
+    plt.ylabel('Популяция')
+    plt.grid('off')
+    plt.legend()
+    plt.show()
