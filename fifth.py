@@ -35,7 +35,7 @@ class AbstractExplicitRKmethod(ABC):
         k = np.zeros(len(self.b))
         k[0] = self.f(u_i)
         for i in range(len(k) - 1):
-            k[i + 1] = self.f(u_i + np.dot(self.a[i + 1, :], k))
+            k[i + 1] = self.f(u_i + self.dt * np.dot(self.a[i + 1, :], k))
         return k
     
     def plot_solution(self):
